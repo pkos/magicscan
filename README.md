@@ -14,15 +14,16 @@ Author:
 
  SYSTEMS TO SUPPORT | DETECTS SYSYEM | GETS SERIAL
  ------------------ | -------------- | -----------
- NEC - PC Engine CD - TurboGrafx-CD | X | 
- Nintendo - GameCube | X | X
- Nintendo - Nintendo 3DS | X | 
- Nintendo - Nintendo Wii | X | X
- Panasonic - 3DO | X | 
- Philips - CDi | X | 
- Sega - Dreamcast | X | X
- Sega - Mega-CD - Sega CD | X | X
- Sega - Saturn | X | X
- SNK - Neo Geo CD | X | 
- Sony - Playstation | X |           
- Sony - PlayStation Portable | X | X
+ NEC - PC Engine CD - TurboGrafx-CD | iso | 
+ Nintendo - GameCube | iso, bin/cue | iso, bin/cue
+ Nintendo - Nintendo 3DS | 3ds | 
+ Nintendo - Nintendo Wii | iso, bin/cue | iso, bin/cue
+ Panasonic - 3DO | iso, bin/cue | 
+ Philips - CDi | iso, bin/cue | 
+ Sega - Dreamcast | iso, bin/cue | iso, bin/cue
+ Sega - Mega-CD - Sega CD | iso, bin/cue | iso, bin/cue
+ Sega - Saturn | iso, bin/cue | iso, bin/cue
+ SNK - Neo Geo CD |  | 
+ Sony - Playstation | iso, bin/cue |           
+ Sony - PlayStation Portable | iso, bin/cue | iso, bin/cue
+ 
