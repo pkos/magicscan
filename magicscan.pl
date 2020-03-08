@@ -18,25 +18,33 @@ use Term::ProgressBar;
 
 #check command line
 my $substringh = "-h";
+my $substringr = "-redump";
 my $directory = "";
 my $cdimage = "";
+my $redump = "FALSE";
 
 foreach my $argument (@ARGV) {
   if ($argument =~ /\Q$substringh\E/) {
-    print "magicscan v0.6 - Generate disc code serials from a directory scan\n";
+    print "magicscan v0.7 - Generate disc code serials from a directory scan\n";
 	print "\n";
-	print "with magicscan [directory ...]";
+	print "with magicscan [ options ] [directory ...]\n";
+    print "\n";
+	print "Options:\n";
+	print "  -redump    attempts to process the serials into compatiblity with redump curation (otherwise raw)\n";
     print "\n";
 	print "Notes:\n";
 	print "  [directory] should be the path to the games folder\n";
 	print "\n";
 	print "Example:\n";
-	print '   magicscan "D:/ROMS/Atari - 2600"' . "\n";
+	print '   magicscan -redump "D:/ROMS/Atari - 2600"' . "\n";
 	print "\n";
 	print "Author:\n";
 	print "   Discord - Romeo#3620\n";
 	print "\n";
     exit;
+  }
+  if ($argument =~ /\Q$substringr\E/) {
+    $redump = "TRUE";
   }
 }
 
@@ -70,11 +78,20 @@ while (my $filename = readdir(DIR)) {
   }
 }
 closedir(DIR);
+
+#debug
+my $tempstr;
+if ($redump eq "TRUE") {
+  $tempstr = "redump";
+} elsif ($redump eq "FALSE") {
+  $tempstr = "raw";
+} 
+print "serials format: " . $tempstr . "\n";
+
 my $max = scalar(@linesf);
-my $progress = Term::ProgressBar->new({name => 'progress', count => $max});
+my $progress = Term::ProgressBar->new({name => 'scanning', count => $max});
 
 #Loop each iso and printout
-
 open(LOG, ">", "serial_log.txt") or die "Could not open serial_log.txt\n";
 	
 my $offset;
@@ -82,12 +99,14 @@ my $read;
 my $magic;
 my $pos;
 my $match;
-	
+my $count;
+
 foreach my $element (@linesf) {
    $progress->update($_);
    
    my $systemname = "Unknown";
    my $game_id = "Unknown";
+   my $region_id = "Unknown";
    
    if (lc substr($element, -4) eq '.iso') {
 
@@ -214,10 +233,8 @@ foreach my $element (@linesf) {
 	
 	#Panasonic - 3DO
 	for ($pos = 0; $pos < 10000; $pos++) {
-    
 	  seek FILE, $pos, 0;
       if ((read FILE, $magic, 7) > 0) {
-
         if ($magic eq "\x01\x5a\x5a\x5a\x5a\x5a\x01") {
           $match = "TRUE";
 		  last;
@@ -225,10 +242,8 @@ foreach my $element (@linesf) {
 	  }
 	}
 	for ($pos = 0; $pos < 10000; $pos++) {
-    
 	  seek FILE, $pos, 0;
       if ((read FILE, $magic, 6) > 0) {
-
         if (uc $magic eq "CD-ROM" and $match = "TRUE") {
 	      $systemname = "Panasonic - 3DO";
 		}
@@ -306,43 +321,259 @@ foreach my $element (@linesf) {
       }
     } elsif ($systemname eq "Sony - Playstation") {
 
-    } elsif ($systemname eq "Nintendo - GameCube") {
-
+	  
+    } elsif ($redump eq "TRUE" and $systemname eq "Nintendo - GameCube") { # redump serial matching code (missing region offset)
       seek(FILE, 0, 0); # 0 seems right, 2 to match redump serials
-      if (read(FILE, $game_id, 6) > 0) # 6 seems right, 4 to match redump
+      if (read(FILE, $game_id, 4) > 0) # 6 seems right, 4 to match redump
+      {
+        	
+		$game_id =~ s/\s+$//; # rule right trim spaces till text
+		$game_id = "DL-DOL-" . $game_id; # add prefix
+		my $region_id = substr $game_id, -1;
+		
+		if ($element =~ m/\(Disc 1/i or $element =~ m/\(Disk 1/i) {
+		  $game_id = $game_id . "-0";
+		} elsif ($element =~ m/\(Disc 2/i or $element =~ m/\(Disk 2/i) {
+		  $game_id = $game_id . "-1";
+		}
+
+		if ($region_id eq "E") {
+		  $game_id = $game_id . "-USA";
+		} elsif ($region_id eq "J") {
+		  $game_id = $game_id . "-JPN";
+		} elsif ($region_id eq "P") {
+		  $game_id = $game_id . "-EUR";  # P can also be P-UKV, P-AUS
+		} elsif ($region_id eq "X") {
+		  $game_id = $game_id . "-EUR";  # X can also be X-UKV, X-EUU
+		} elsif ($region_id eq "Y") {
+		  $game_id = $game_id . "-FAH";
+		} elsif ($region_id eq "D") {
+		  $game_id = $game_id . "-NOE";
+		} elsif ($region_id eq "S") {
+		  $game_id = $game_id . "-ESP";
+		} elsif ($region_id eq "F") {
+		  $game_id = $game_id . "-FRA";
+		} elsif ($region_id eq "I") {
+		  $game_id = $game_id . "-ITA";
+		} elsif ($region_id eq "H") {
+		  $game_id = $game_id . "-HOL";
+		}
+      }  
+    } elsif ($redump eq "FALSE" and $systemname eq "Nintendo - GameCube") {
+      seek(FILE, 0, 0); # 0
+      if (read(FILE, $game_id, 6) > 0)
       {
 
       } 
-    #} elsif ($systemname eq "Nintendo - GameCube") { # redump serial matching code (missing region offset)
-    #
-    #  seek(FILE, 2, 0); # 0 seems right, 2 to match redump serials
-    #  if (read(FILE, $game_id, 4) > 0) # 6 seems right, 4 to match redump
-    #  {
-    #    $game_id = "DL-DOL-" . $game_id . "";
-    #  } 
-    } elsif ($systemname eq "Sega - Mega CD & Sega CD") {
-
+	  
+    } elsif ($redump eq "TRUE" and $systemname eq "Sega - Mega CD & Sega CD") {
       seek(FILE, 0x0183, 0);
+      if (read(FILE, $game_id, 11) > 0) {
+
+	      $game_id =~ s/\s+$//; # rule right trim spaces till text
+		  $game_id =~ s/ //; # rule all spaces with no spacea 
+		  #$count = () = $game_id =~ /-/g; # count total number of hyphens
+
+          my $rhyphenpos;
+          my $lgame_id;
+          my $rgame_id;
+  	      
+          my $checkth =  substr $game_id, 0, 2;
+          my $checkgh =  substr $game_id, 0, 2;
+		  my $checkmkh =  substr $game_id, 0, 3;
+		  my $check50 = substr $game_id, -2, 2;
+          my $count = 0;
+		  my $length = length $game_id;
+		  
+		  if ($checkth eq "T-") {
+		     $rhyphenpos = rindex($game_id, "-");
+	  		 $game_id = substr $game_id, 0, $rhyphenpos;
+		  } elsif ($checkgh eq "G-") {
+		     $rhyphenpos = rindex($game_id, "-");
+	  		 $game_id = substr $game_id, 0, $rhyphenpos;
+          } elsif ($checkmkh eq "MK-") {
+		     if ($check50 eq "50") {
+			   $lgame_id = substr $game_id, 3, 4;
+			   $rgame_id = "-50";
+			   $game_id = $lgame_id . $rgame_id
+			 } else {
+			   $game_id = substr $game_id, 3, 4;
+			 }
+		  }
+	  }
+	} elsif ($redump eq "FALSE" and $systemname eq "Sega - Mega CD & Sega CD") {
+	  seek(FILE, 0x0183, 0);
       if (read(FILE, $game_id, 11) > 0)
       {
 
       }
-    } elsif ($systemname eq "Sega - Saturn") {
-
+	  
+	} elsif ($redump eq "TRUE" and $systemname eq "Sega - Saturn") {
       seek(FILE, 0x0020, 0);
-      if (read(FILE, $game_id, 9) > 0)
-      {
-
+      if (read(FILE, $game_id, 9) > 0) {
+	  	 
+		 $game_id =~ s/\s+$//; # rule right trim spaces till text
+		 
+	     my $rhyphenpos;
+         my $lgame_id;
+         my $rgame_id;
+  	      
+         my $checkth =  substr $game_id, 0, 2;
+         my $checkmkh =  substr $game_id, 0, 3;
+		 my $count = 0;
+		 my $length = length $game_id;
+		  
+         seek(FILE, 0x0040, 0);
+		 if (read(FILE, $region_id, 1) > 0) {
+		    if ($region_id eq "U") {
+		      if ($checkmkh eq "MK-") {
+                 $game_id = substr $game_id, 3;
+              }			  
+			} elsif ($region_id eq "E") {
+			  $lgame_id = substr $game_id, 0, 2;
+              $rgame_id = substr $game_id, 3;
+			  $game_id = $lgame_id .  $rgame_id;
+			  $game_id = $game_id . "-50";
+			}
+		 }
       }
-    } elsif ($systemname eq "Sega - Dreamcast") {
-
+	} elsif ($redump eq "FALSE" and $systemname eq "Sega - Saturn") {
+	   seek(FILE, 0x0020, 0);
+       if (read(FILE, $game_id, 9) > 0)
+       {
+    
+       }
+	  
+    } elsif ($redump eq "TRUE" and $systemname eq "Sega - Dreamcast") { #redump code
+      seek(FILE, 0x0040, 0);
+      if (read(FILE, $game_id, 10) > 0) {
+	  
+	      $game_id =~ s/\s+$//; # rule right trim spaces till text
+		  $game_id =~ s/  / /; # rule replace 2 spaces with 1 space 
+	      $game_id =~ s/ /-/g; # rule replace spaces with hyphens
+		  #$game_id =~ s/--/-/g; # exception if we replaced two spaces in a row, make it single
+		  $count = () = $game_id =~ /-/g; # count total number of hyphens
+		 		
+          my $rhyphenpos;
+          my $lgame_id;
+          my $rgame_id;
+  	      
+          my $checkth =  substr $game_id, 0, 2;
+          my $checkt =  substr $game_id, 0, 1;
+          my $checkhdrh =  substr $game_id, 0, 4;
+		  my $checkhdr =  substr $game_id, 0, 3;
+		  my $checkmkh =  substr $game_id, 0, 3;
+		  my $checkmk =  substr $game_id, 0, 2;
+          my $count = 0;
+		  my $length = length $game_id;
+		  
+		  if ($checkth eq "T-") {
+		      $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back T
+		      } elsif ($count == 1 and $length <= 7) {
+			    $game_id = substr $game_id, 0, 7;
+			  } elsif ($count == 1 and $length > 8) {
+				  $lgame_id = substr $game_id, 0, 7;
+				  $rgame_id = substr $game_id, -2, 2;
+				  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 1;
+ 		  		 $rgame_id = substr $game_id, 1;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+		      }
+		  } elsif ($checkt eq "T") {
+			  $lgame_id = substr $game_id, 0, 1;
+ 			  $rgame_id = substr $game_id, 1, (length $game_id); # rule put a hyphen after T
+			  $game_id = $lgame_id . "-" . $rgame_id;
+		      $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back T
+		      } elsif ($count == 1 and $length <= 7) {
+			    $game_id = substr $game_id, 0, 8;
+			  } elsif ($count == 1 and $length > 8) {
+				  $lgame_id = substr $game_id, 0, 7;
+				  $rgame_id = substr $game_id, -2, 2;
+				  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 1;
+ 		  		 $rgame_id = substr $game_id, 1;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+		      }
+		  } elsif ($checkhdrh eq "HDR-") {
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+		  	  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -4, 4;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back HDR
+		      }
+		  } elsif ($checkhdr eq "HDR") {
+		  	  $lgame_id = substr $game_id, 0, 3;
+			  $rgame_id = substr $game_id, 4;
+			  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after HDR
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+		  	  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -4, 4;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back HDR
+		      }
+		  } elsif ($checkmkh eq "MK-") {
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back MR
+		      } elsif ($count == 1 and $length <= 8) {
+			    $game_id = substr $game_id, 0, 8;
+			  } elsif ($count == 1 and $length > 8) {
+				  $lgame_id = substr $game_id, 0, 8;
+				  $rgame_id = substr $game_id, -2, 2;
+				  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 2;
+ 		  		 $rgame_id = substr $game_id, 2;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+		      }
+		  } elsif ($checkmk eq "MK") {
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back MR
+		      } elsif ($count == 1) {
+				 $lgame_id = substr $game_id, 0, 8;
+ 		  		 if (length($lgame_id) == 8) {
+				   $rgame_id = "";
+				   $game_id = $lgame_id;
+				 } else {
+				   $rgame_id = substr $game_id, -2, 2;
+				   $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+				 }
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 2;
+ 		  		 $rgame_id = substr $game_id, 2;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+		      }
+		  }
+		}
+      } elsif ($redump eq "FALSE" and $systemname eq "Sega - Dreamcast") {
       seek(FILE, 0x0040, 0);
       if (read(FILE, $game_id, 10) > 0)
       {
 
-      }  
+      } 
+	  
     } elsif ($systemname eq "Nintendo - Nintendo Wii") {
-
       seek(FILE, 0x0000, 0);
       if (read(FILE, $game_id, 6) > 0)
       {
@@ -506,48 +737,269 @@ foreach my $element (@linesf) {
     }
 	
     #--------------------------------- Get Serials BIN
-    if ($systemname eq "Nintendo - GameCube") {
-
+    
+     if ($redump eq "TRUE" and $systemname eq "Nintendo - GameCube") { # redump serial matching code (missing region offset)
       seek(BIN, 0, 0); # 0 seems right, 2 to match redump serials
-      if (read(BIN, $game_id, 6) > 0) # 6 seems right, 4 to match redump
+      if (read(BIN, $game_id, 4) > 0) # 6 seems right, 4 to match redump
+      {
+        	
+		$game_id =~ s/\s+$//; # rule right trim spaces till text
+		$game_id = "DL-DOL-" . $game_id; # add prefix
+		my $region_id = substr $game_id, -1;
+		
+		if ($element =~ m/\(Disc 1/i or $element =~ m/\(Disk 1/i) {
+		  $game_id = $game_id . "-0";
+		} elsif ($element =~ m/\(Disc 2/i or $element =~ m/\(Disk 2/i) {
+		  $game_id = $game_id . "-1";
+		}
+		
+		if ($region_id eq "E") {
+		  $game_id = $game_id . "-USA";
+		} elsif ($region_id eq "J") {
+		  $game_id = $game_id . "-JPN";
+		} elsif ($region_id eq "P") {
+		  $game_id = $game_id . "-EUR";  # P can also be P-UKV, P-AUS
+		} elsif ($region_id eq "X") {
+		  $game_id = $game_id . "-EUR";  # X can also be X-UKV, X-EUU
+		} elsif ($region_id eq "Y") {
+		  $game_id = $game_id . "-FAH";
+		} elsif ($region_id eq "D") {
+		  $game_id = $game_id . "-NOE";
+		} elsif ($region_id eq "S") {
+		  $game_id = $game_id . "-ESP";
+		} elsif ($region_id eq "F") {
+		  $game_id = $game_id . "-FRA";
+		} elsif ($region_id eq "I") {
+		  $game_id = $game_id . "-ITA";
+		} elsif ($region_id eq "H") {
+		  $game_id = $game_id . "-HOL";
+		}
+      }  
+    } elsif ($redump eq "FALSE" and $systemname eq "Nintendo - GameCube") {
+      seek(BIN, 0, 0); # 0
+      if (read(BIN, $game_id, 6) > 0)
       {
 
-      } 
-    } elsif ($systemname eq "Nintendo - Nintendo Wii") {
+      }
 
+    } elsif ($systemname eq "Nintendo - Nintendo Wii") {
       seek(BIN, 0x0000, 0);
       if (read(BIN, $game_id, 6) > 0)
       {
 
       } 
-    } elsif ($systemname eq "Sega - Dreamcast") {
 
+    } elsif ($redump eq "TRUE" and $systemname eq "Sega - Dreamcast") { #redump code
+      seek(BIN, 0x0050, 0);
+      if (read(BIN, $game_id, 10) > 0) {
+	  
+	      $game_id =~ s/\s+$//; # rule right trim spaces till text
+		  $game_id =~ s/  / /; # rule replace 2 spaces with 1 space 
+	      $game_id =~ s/ /-/g; # rule replace spaces with hyphens
+		  #$game_id =~ s/--/-/g; # exception if we replaced two spaces in a row, make it single
+		  $count = () = $game_id =~ /-/g; # count total number of hyphens
+		 		
+          my $rhyphenpos;
+          my $lgame_id;
+          my $rgame_id;
+  	      
+          my $checkth =  substr $game_id, 0, 2;
+          my $checkt =  substr $game_id, 0, 1;
+          my $checkhdrh =  substr $game_id, 0, 4;
+		  my $checkhdr =  substr $game_id, 0, 3;
+		  my $checkmkh =  substr $game_id, 0, 3;
+		  my $checkmk =  substr $game_id, 0, 2;
+          my $count = 0;
+		  my $length = length $game_id;
+		  
+		  if ($checkth eq "T-") {
+		      $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back T
+		      } elsif ($count == 1 and $length <= 7) {
+			    $game_id = substr $game_id, 0, 7;
+			  } elsif ($count == 1 and $length > 8) {
+				  $lgame_id = substr $game_id, 0, 7;
+				  $rgame_id = substr $game_id, -2, 2;
+				  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 1;
+ 		  		 $rgame_id = substr $game_id, 1;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+		      }
+		  } elsif ($checkt eq "T") {
+			  $lgame_id = substr $game_id, 0, 1;
+ 			  $rgame_id = substr $game_id, 1, (length $game_id); # rule put a hyphen after T
+			  $game_id = $lgame_id . "-" . $rgame_id;
+		      $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back T
+		      } elsif ($count == 1 and $length <= 7) {
+			    $game_id = substr $game_id, 0, 8;
+			  } elsif ($count == 1 and $length > 8) {
+				  $lgame_id = substr $game_id, 0, 7;
+				  $rgame_id = substr $game_id, -2, 2;
+				  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 1;
+ 		  		 $rgame_id = substr $game_id, 1;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after T
+		      }
+		  } elsif ($checkhdrh eq "HDR-") {
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+		  	  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -4, 4;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back HDR
+		      }
+		  } elsif ($checkhdr eq "HDR") {
+		  	  $lgame_id = substr $game_id, 0, 3;
+			  $rgame_id = substr $game_id, 4;
+			  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after HDR
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+		  	  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -4, 4;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back HDR
+		      }
+		  } elsif ($checkmkh eq "MK-") {
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back MR
+		      } elsif ($count == 1 and $length <= 8) {
+			    $game_id = substr $game_id, 0, 8;
+			  } elsif ($count == 1 and $length > 8) {
+				  $lgame_id = substr $game_id, 0, 8;
+				  $rgame_id = substr $game_id, -2, 2;
+				  $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 2;
+ 		  		 $rgame_id = substr $game_id, 2;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+		      }
+		  } elsif ($checkmk eq "MK") {
+		  	  $count = () = $game_id =~ /-/g; # count total number of hyphens
+			  if ($count >= 2) { #special case if 2 or more hypens exist from our previous replace
+		         $rhyphenpos = rindex($game_id, "-");
+		  		 $lgame_id = substr $game_id, 0, $rhyphenpos;
+ 		  		 $rgame_id = substr $game_id, -2, 2;
+		  		 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen in back MR
+		      } elsif ($count == 1) {
+				 $lgame_id = substr $game_id, 0, 8;
+ 		  		 if (length($lgame_id) == 8) {
+				   $rgame_id = "";
+				   $game_id = $lgame_id;
+				 } else {
+				   $rgame_id = substr $game_id, -2, 2;
+				   $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+				 }
+			  } else {
+			  	 $lgame_id = substr $game_id, 0, 2;
+ 		  		 $rgame_id = substr $game_id, 2;
+				 $game_id = $lgame_id . "-" . $rgame_id; # rule put a hyphen after MR
+		      }
+		  }
+		}
+      } elsif ($redump eq "FALSE" and $systemname eq "Sega - Dreamcast") {
       seek(BIN, 0x0050, 0);
       if (read(BIN, $game_id, 10) > 0)
       {
 
-      }  
-    } elsif ($systemname eq "Sega - Mega CD & Sega CD") {
-
+      } 
+	  
+    } elsif ($redump eq "TRUE" and $systemname eq "Sega - Mega CD & Sega CD") {
       seek(BIN, 0x0193, 0);
+      if (read(BIN, $game_id, 11) > 0) {
+
+	      $game_id =~ s/\s+$//; # rule right trim spaces till text
+		  $game_id =~ s/ //; # rule all spaces with no spacea 
+		  #$count = () = $game_id =~ /-/g; # count total number of hyphens
+
+          my $rhyphenpos;
+          my $lgame_id;
+          my $rgame_id;
+  	      
+          my $checkth =  substr $game_id, 0, 2;
+          my $checkgh =  substr $game_id, 0, 2;
+		  my $checkmkh =  substr $game_id, 0, 3;
+		  my $check50 = substr $game_id, -2, 2;
+          my $count = 0;
+		  my $length = length $game_id;
+		  
+		  if ($checkth eq "T-") {
+		     $rhyphenpos = rindex($game_id, "-");
+	  		 $game_id = substr $game_id, 0, $rhyphenpos;
+		  } elsif ($checkgh eq "G-") {
+		     $rhyphenpos = rindex($game_id, "-");
+	  		 $game_id = substr $game_id, 0, $rhyphenpos;
+          } elsif ($checkmkh eq "MK-") {
+		     if ($check50 eq "50") {
+			   $lgame_id = substr $game_id, 3, 4;
+			   $rgame_id = "-50";
+			   $game_id = $lgame_id . $rgame_id
+			 } else {
+			   $game_id = substr $game_id, 3, 4;
+			 }
+		  }
+	  }
+	} elsif ($redump eq "FALSE" and $systemname eq "Sega - Mega CD & Sega CD") {
+	  seek(BIN, 0x0193, 0);
       if (read(BIN, $game_id, 11) > 0)
       {
 
       }
-	} elsif ($systemname eq "Sega - Saturn") {
 
+	} elsif ($redump eq "TRUE" and $systemname eq "Sega - Saturn") {
       seek(BIN, 0x0030, 0);
-      if (read(BIN, $game_id, 9) > 0)
-      {
-
+      if (read(BIN, $game_id, 9) > 0) {
+	  	 
+		 $game_id =~ s/\s+$//; # rule right trim spaces till text
+		 
+	     my $rhyphenpos;
+         my $lgame_id;
+         my $rgame_id;
+  	      
+         my $checkth =  substr $game_id, 0, 2;
+         my $checkmkh =  substr $game_id, 0, 3;
+		 my $count = 0;
+		 my $length = length $game_id;
+		  
+         seek(BIN, 0x0050, 0);
+		 if (read(BIN, $region_id, 1) > 0) {
+		    if ($region_id eq "U") {
+		      if ($checkmkh eq "MK-") {
+                 $game_id = substr $game_id, 3;
+              }			  
+			} elsif ($region_id eq "E") {
+			  $lgame_id = substr $game_id, 0, 2;
+              $rgame_id = substr $game_id, 3;
+			  $game_id = $lgame_id .  $rgame_id;
+			  $game_id = $game_id . "-50";
+			}
+		 }
       }
-    } elsif ($systemname eq "Sony - Playstation Portable") {
-  
-      for ($pos = 0; $pos < 100000; $pos++) {
+	} elsif ($redump eq "FALSE" and $systemname eq "Sega - Saturn") {
+	   seek(BIN, 0x0030, 0);
+       if (read(BIN, $game_id, 9) > 0)
+       {
     
+       }
+	   
+    } elsif ($systemname eq "Sony - Playstation Portable") {
+      for ($pos = 0; $pos < 100000; $pos++) {
 	    seek BIN, $pos, 0;
         if ((read BIN, $game_id, 5) > 0) {
-
           if (
              ($game_id eq "ULES-")
              or ($game_id eq "ULUS-")

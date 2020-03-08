@@ -1,15 +1,18 @@
-magicscan v0.5 - Generate disc code serials from a directory scan
+magicscan v0.7 - Generate disc code serials from a directory scan
 
-with magicscan [directory ...]
+with magicscan [ options ] [directory ...]
+
+Options:
+  -redump    attempts to process the serials into compatiblity with redump curation (otherwise raw)
+
 Notes:
   [directory] should be the path to the games folder
 
 Example:
-   magicscan "D:/ROMS/Atari - 2600"
+   magicscan -redump "D:/ROMS/Atari - 2600"
 
 Author:
    Discord - Romeo#3620
-
 
 
  SYSTEMS TO SUPPORT | DETECTS SYSYEM | GETS SERIAL
