@@ -46,10 +46,13 @@ Author:
 addtomagicmap (magicscan) v0.5 - Utility used for building the magicmap.map file used by magicscan.
 
 with `addtomagicmap [dat file ...] [system]`
+
 Notes:
+
   `[system]    should match a RetroArch database to properly configure system icons`
 
 Example:
+
               `addtomagicmap "D:/Atari - 2600.dat" "Atari - 2600"`
 
 Author:
