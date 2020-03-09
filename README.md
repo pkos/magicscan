@@ -1,4 +1,4 @@
-magicscan v0.7 - Generate disc code serials from a directory scan
+magicscan v0.8 - Generate disc code serials from a directory scan
 
 with magicscan [ options ] [directory ...]
 

@@ -25,7 +25,7 @@ my $redump = "FALSE";
 
 foreach my $argument (@ARGV) {
   if ($argument =~ /\Q$substringh\E/) {
-    print "magicscan v0.7 - Generate disc code serials from a directory scan\n";
+    print "magicscan v0.8 - Generate disc code serials from a directory scan\n";
 	print "\n";
 	print "with magicscan [ options ] [directory ...]\n";
     print "\n";
@@ -137,8 +137,10 @@ foreach my $element (@linesf) {
     #$read = read FILE, $magic, $MAGIC_LEN;
     #print "0xb381: $magic\n";
 
-    #----------------------- Detect systems ISO
-    #PSP
+    #----- Detect systems ISO --------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	
+    #----- Sony - PlayStation Portable -----
 	$offset = 0x8008;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 8;
@@ -150,7 +152,7 @@ foreach my $element (@linesf) {
        }
     }
     
-	#PS1
+	#----- Sony - Playstation -----
 	$offset = 0x8008;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 11;
@@ -162,7 +164,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#Nintendo - GameCube
+	#----- Nintendo - GameCube -----
 	$offset = 0x001c;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 4;
@@ -174,7 +176,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#Sega CD
+	#----- Sega - Mega CD & Sega CD -----
 	$offset = 0x0000;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 14;
@@ -195,7 +197,7 @@ foreach my $element (@linesf) {
 	   }
 	}
 	
-	#Sega - Saturn
+	#----- Sega - Saturn -----
 	$offset = 0x0000;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 15;
@@ -207,7 +209,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#Sega - Dreamcast
+	#----- Sega - Dreamcast -----
 	$offset = 0x0000;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 15;
@@ -219,7 +221,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-    #Nintendo - Nintendo Wii
+    #----- Nintendo - Nintendo Wii -----
 	$offset = 0x0018;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 4;
@@ -231,7 +233,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#Panasonic - 3DO
+	#----- Panasonic - 3DO -----
 	for ($pos = 0; $pos < 10000; $pos++) {
 	  seek FILE, $pos, 0;
       if ((read FILE, $magic, 7) > 0) {
@@ -250,7 +252,7 @@ foreach my $element (@linesf) {
 	  }
 	}
 		
-	#Philips - CDi
+	#----- Philips - CDi -----
 	$offset = 0x8008;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 7;
@@ -262,7 +264,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#NEC - PC Engine CD - TurboGrafx-CD
+	#----- NEC - PC Engine CD - TurboGrafx-CD ------
 	$offset = 0x0820;
 	seek FILE, $offset, 0;
     $read = read FILE, $magic, 16;
@@ -274,9 +276,9 @@ foreach my $element (@linesf) {
        }
     }
 	
-    #--------------------------------- Get Serials ISO
-
-    #Get Serial
+    #----- Get Serials ISO --------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------------
+	#----- Sony - PlayStation Portable -----
     if ($systemname eq "Sony - Playstation Portable") {
   
       for ($pos = 0; $pos < 100000; $pos++) {
@@ -296,6 +298,10 @@ foreach my $element (@linesf) {
              or ($game_id eq "UCJS-")
              or ($game_id eq "UCAS-")
 
+             or ($game_id eq "ULKS-")
+             or ($game_id eq "ULAS-")
+             or ($game_id eq "ULKS-")
+
              or ($game_id eq "NPEH-")
              or ($game_id eq "NPUH-")
              or ($game_id eq "NPJH-")
@@ -308,6 +314,7 @@ foreach my $element (@linesf) {
              or ($game_id eq "NPEZ-")
              or ($game_id eq "NPUZ-")
              or ($game_id eq "NPJZ-")
+			 
           ) {
             seek(FILE, $pos, 0);
             if (read(FILE, $game_id, 10) > 0) {
@@ -321,10 +328,10 @@ foreach my $element (@linesf) {
       }
     } elsif ($systemname eq "Sony - Playstation") {
 
-	  
+	#----- Nintendo - GameCube -----	  
     } elsif ($redump eq "TRUE" and $systemname eq "Nintendo - GameCube") { # redump serial matching code (missing region offset)
-      seek(FILE, 0, 0); # 0 seems right, 2 to match redump serials
-      if (read(FILE, $game_id, 4) > 0) # 6 seems right, 4 to match redump
+      seek(FILE, 0, 0); 
+      if (read(FILE, $game_id, 4) > 0) 
       {
         	
 		$game_id =~ s/\s+$//; # rule right trim spaces till text
@@ -366,6 +373,7 @@ foreach my $element (@linesf) {
 
       } 
 	  
+	#----- Sega - Mega CD & Sega CD -----  
     } elsif ($redump eq "TRUE" and $systemname eq "Sega - Mega CD & Sega CD") {
       seek(FILE, 0x0183, 0);
       if (read(FILE, $game_id, 11) > 0) {
@@ -408,6 +416,7 @@ foreach my $element (@linesf) {
 
       }
 	  
+	#----- Sega - Saturn -----
 	} elsif ($redump eq "TRUE" and $systemname eq "Sega - Saturn") {
       seek(FILE, 0x0020, 0);
       if (read(FILE, $game_id, 9) > 0) {
@@ -444,6 +453,7 @@ foreach my $element (@linesf) {
     
        }
 	  
+	#----- Sega - Dreamcast -----  
     } elsif ($redump eq "TRUE" and $systemname eq "Sega - Dreamcast") { #redump code
       seek(FILE, 0x0040, 0);
       if (read(FILE, $game_id, 10) > 0) {
@@ -573,6 +583,7 @@ foreach my $element (@linesf) {
 
       } 
 	  
+	#----- Nintendo - Nintendo Wii -----
     } elsif ($systemname eq "Nintendo - Nintendo Wii") {
       seek(FILE, 0x0000, 0);
       if (read(FILE, $game_id, 6) > 0)
@@ -607,8 +618,9 @@ foreach my $element (@linesf) {
 	open(BIN, $directory . "/" . $cuefile) or die "Could not open file '$cuefile' $!";
     binmode BIN;
 	
-	#----------------------- Detect systems BIN
-	#Nintendo - GameCube
+    #----- Detect systems BIN --------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#----- Nintendo - GameCube -----
 	$offset = 0x001c;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 4;
@@ -620,7 +632,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-    #Sega - Dreamcast
+    #----- Sega - Dreamcast -----
 	$offset = 0x0010;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 15;
@@ -632,7 +644,7 @@ foreach my $element (@linesf) {
        }
     }
 
-    #Nintendo - Nintendo Wii
+    #----- Nintendo - Nintendo Wii -----
 	$offset = 0x0018;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 4;
@@ -644,7 +656,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#Sega CD
+	#----- Sega - Mega CD & Sega CD -----
 	$offset = 0x0010;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 14;
@@ -665,7 +677,7 @@ foreach my $element (@linesf) {
 	   }
 	}
 	
-	#Sega - Saturn
+	#----- Sega - Saturn -----
 	$offset = 0x0010;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 15;
@@ -677,7 +689,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#PSP
+	#----- Sony - Playstation Portable -----
 	$offset = 0x8008;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 8;
@@ -689,7 +701,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#Panasonic - 3DO
+	#----- Panasonic - 3DO -----
 	for ($pos = 0; $pos < 10000; $pos++) {
     
 	  seek BIN, $pos, 0;
@@ -712,7 +724,7 @@ foreach my $element (@linesf) {
 	  }
 	}
 	
-	#Philips - CDi
+	#----- Philips - CDi -----
 	$offset = 0x9320;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 7;
@@ -724,7 +736,7 @@ foreach my $element (@linesf) {
        }
     }
 	
-	#PS1
+	#----- Sony - Playstation -----
 	$offset = 0x9320;
 	seek BIN, $offset, 0;
     $read = read BIN, $magic, 11;
@@ -736,8 +748,9 @@ foreach my $element (@linesf) {
        }
     }
 	
-    #--------------------------------- Get Serials BIN
-    
+    #----- Get Serials BIN --------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------------
+    #----- Nintendo - GameCube -----
      if ($redump eq "TRUE" and $systemname eq "Nintendo - GameCube") { # redump serial matching code (missing region offset)
       seek(BIN, 0, 0); # 0 seems right, 2 to match redump serials
       if (read(BIN, $game_id, 4) > 0) # 6 seems right, 4 to match redump
@@ -782,6 +795,7 @@ foreach my $element (@linesf) {
 
       }
 
+    #----- Nintendo - Nintendo Wii -----
     } elsif ($systemname eq "Nintendo - Nintendo Wii") {
       seek(BIN, 0x0000, 0);
       if (read(BIN, $game_id, 6) > 0)
@@ -789,6 +803,7 @@ foreach my $element (@linesf) {
 
       } 
 
+    #----- ega - Dreamcast -----
     } elsif ($redump eq "TRUE" and $systemname eq "Sega - Dreamcast") { #redump code
       seek(BIN, 0x0050, 0);
       if (read(BIN, $game_id, 10) > 0) {
@@ -918,6 +933,7 @@ foreach my $element (@linesf) {
 
       } 
 	  
+	#----- Sega - Mega CD & Sega CD -----
     } elsif ($redump eq "TRUE" and $systemname eq "Sega - Mega CD & Sega CD") {
       seek(BIN, 0x0193, 0);
       if (read(BIN, $game_id, 11) > 0) {
@@ -960,6 +976,7 @@ foreach my $element (@linesf) {
 
       }
 
+    #----- Sega - Saturn -----
 	} elsif ($redump eq "TRUE" and $systemname eq "Sega - Saturn") {
       seek(BIN, 0x0030, 0);
       if (read(BIN, $game_id, 9) > 0) {
@@ -996,6 +1013,7 @@ foreach my $element (@linesf) {
     
        }
 	   
+	#----- Sony - Playstation Portable -----
     } elsif ($systemname eq "Sony - Playstation Portable") {
       for ($pos = 0; $pos < 100000; $pos++) {
 	    seek BIN, $pos, 0;
@@ -1012,6 +1030,10 @@ foreach my $element (@linesf) {
              or ($game_id eq "UCJS-")
              or ($game_id eq "UCAS-")
 
+             or ($game_id eq "ULKS-")
+             or ($game_id eq "ULAS-")
+             or ($game_id eq "ULKS-")
+			 
              or ($game_id eq "NPEH-")
              or ($game_id eq "NPUH-")
              or ($game_id eq "NPJH-")
@@ -1042,7 +1064,9 @@ foreach my $element (@linesf) {
     print LOG "System: $systemname\n";
     print LOG "Game ID: $game_id\n";
     print LOG "\n";  
-	
+
+  #----- Detect systems 3DS --------------------------------------------------------------------------------------------------------
+  #---------------------------------------------------------------------------------------------------------------------------------	
   } elsif (lc substr($element, -4) eq '.3ds') {
 
     #Detect system
