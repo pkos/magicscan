@@ -11,12 +11,15 @@ my @linesdat;
 #check command line
 foreach my $argument (@ARGV) {
   if ($argument =~ /\Q$substringh\E/) {
-    print "addmap (magicscan) v0.5 - Utility used for building the magicmap.map file used by magicscan. \n";
+    print "addtomagicmap (magicscan) v0.5 - Utility used for building the magicmap.map file used by magicscan. \n";
 	print "\n";
-	print "with addmap [dat file ...] [system]";
+	print "with addtomagicmap [dat file ...] [system]";
+	print "\n";
+	print "Notes:\n";
+    print "  [system]    should match a RetroArch database to properly configure system icons\n";
     print "\n";
 	print "Example:\n";
-	print '              addmap "D:/Atari - 2600.dat" "Atari - 2600"' . "\n";
+	print '              addtomagicmap "D:/Atari - 2600.dat" "Atari - 2600"' . "\n";
 	print "\n";
 	print "Author:\n";
 	print "   Discord - Romeo#3620\n";

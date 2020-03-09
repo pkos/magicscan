@@ -1,6 +1,6 @@
 magicscan v0.9 - Generate disc code serials from a directory scan
 
-with magicscan [ options ] [directory ...] [ system ]
+with `magicscan [ options ] [directory ...] [ system ]`
 
 Options:
   -redump    attempts to process the serials into compatiblity with redump curation (otherwise raw)
@@ -33,3 +33,17 @@ Author:
  Sony - Playstation | iso, bin/cue | |            
  Sony - PlayStation Portable | iso, bin/cue | iso, bin/cue | lpl
  
+ 
+ ----------------------------------------------------------------------------------------------------
+ 
+addtomagicmap (magicscan) v0.5 - Utility used for building the magicmap.map file used by magicscan.
+
+with `addtomagicmap [dat file ...] [system]`
+Notes:
+  [system]    should match a RetroArch database to properly configure system icons
+
+Example:
+              addtomagicmap "D:/Atari - 2600.dat" "Atari - 2600"
+
+Author:
+   Discord - Romeo#3620
