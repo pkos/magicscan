@@ -18,7 +18,7 @@ Notes:
 
 Example:
 
-                 magicscan -redump -path -playlist "D:/ROMS/Atari - 2600"
+                 magicscan -redump -path -playlist "D:/ROMS/Atari - 2600" "Atari - 2600"
    
 
 Author:
