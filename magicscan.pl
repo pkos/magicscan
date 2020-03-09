@@ -52,7 +52,7 @@ foreach my $argument (@ARGV) {
     print "  [system]    should match a RetroArch database to properly configure system icons\n";
 	print "\n";
 	print "Example:\n";
-	print '   magicscan -redump -path -playlist "D:/ROMS/Atari - 2600"' . "\n";
+	print '   magicscan -redump -path -playlist "D:/ROMS/Atari - 2600" "Atari - 2600"' . "\n";
 	print "\n";
 	print "Author:\n";
 	print "   Discord - Romeo#3620\n";
