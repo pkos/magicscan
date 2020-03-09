@@ -4,15 +4,22 @@ with `magicscan [ options ] [directory ...] [ system ]`
 
 Options:
   `-redump    attempts to process the serials into compatiblity with redump curation (otherwise raw)`
+  
   `-path      write relative path instead of exact drive letter in playlist`
+  
   `-playlist  creates a RetroArch playlist (.lpl) with names and serials curated from redump.org`
+  
 
 Notes:
   `[directory] should be the path to the games folder`
+  
   `[system]    should match a RetroArch database to properly configure system icons`
+  
 
 Example:
+
    `magicscan -redump -path -playlist "D:/ROMS/Atari - 2600"`
+   
 
 Author:
    Discord - Romeo#3620
