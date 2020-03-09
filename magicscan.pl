@@ -113,6 +113,8 @@ print "serials format: " . $tempstr . "\n";
 if ($playlist eq "TRUE") {
   print "relative path: $relative\n";
 }
+
+#---- create playlist header -----
 if ($playlist eq "TRUE") {
   open(LPL, ">", $system . ".lpl") or die "Could not open $system" . ".lpl\n";
 
@@ -176,7 +178,11 @@ my $max = scalar(@linesf);
 my $progress = Term::ProgressBar->new({name => 'scanning', count => $max});
 
 #----- open log file -----
-open(LOG, ">", "serial_log.txt") or die "Could not open serial_log.txt\n";
+if ($redump eq "TRUE") {
+  open(LOG, ">", "redump_serial_log.txt") or die "Could not open redump_serial_log.txt\n";
+} elsif ($redump eq "FALSE") {
+  open(LOG, ">", "raw_serial_log.txt") or die "Could not open raw_serial_log.txt\n";
+}
 
 #----- init detect and get serial variables -----
 my $offset;
@@ -1579,7 +1585,11 @@ foreach my $element (@linesf) {
     print LOG "\n";  
   }
 }
-print "\nwriting:  serial_log.txt\n";
+if ($redump eq "TRUE") {
+  print "\nwriting:  redump_serial_log.txt\n";
+} elsif ($redump eq "FALSE") {
+  print "\nwriting:  raw_serial_log.txt\n";
+}
 close LOG;
 #----- write the end of the playlist -----
 if ($playlist eq "TRUE") {
