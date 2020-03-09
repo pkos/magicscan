@@ -18,7 +18,7 @@ Notes:
 
 Example:
 
-                `magicscan -redump -path -playlist "D:/ROMS/Atari - 2600"`
+                 magicscan -redump -path -playlist "D:/ROMS/Atari - 2600"
    
 
 Author:
@@ -53,7 +53,7 @@ Notes:
 
 Example:
 
-              `addtomagicmap "D:/Atari - 2600.dat" "Atari - 2600"`
+               addtomagicmap "D:/Atari - 2600.dat" "Atari - 2600"
 
 Author:
    Discord - Romeo#3620
