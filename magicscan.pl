@@ -412,7 +412,8 @@ foreach my $element (@linesf) {
              or ($game_id eq "NPEH-")
              or ($game_id eq "NPUH-")
              or ($game_id eq "NPJH-")
-
+             or ($game_id eq "NPHH-")
+			 
              or ($game_id eq "NPEG-")
              or ($game_id eq "NPUG-")
              or ($game_id eq "NPJG-")
@@ -1351,7 +1352,8 @@ foreach my $element (@linesf) {
              or ($game_id eq "NPEH-")
              or ($game_id eq "NPUH-")
              or ($game_id eq "NPJH-")
-
+             or ($game_id eq "NPHH-")
+			 
              or ($game_id eq "NPEG-")
              or ($game_id eq "NPUG-")
              or ($game_id eq "NPJG-")
