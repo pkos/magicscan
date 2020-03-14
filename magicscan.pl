@@ -342,10 +342,19 @@ foreach my $element (@linesf) {
 	  }
 	}
 	for ($pos = 0; $pos < 10000; $pos++) {
+    
 	  seek FILE, $pos, 0;
-      if ((read FILE, $magic, 6) > 0) {
-        if (uc $magic eq "CD-ROM" and $match = "TRUE") {
+      if ((read FILE, $magic, 7) > 0) {
+
+        if (uc substr($magic, 0, 6) eq "CD-ROM" and $match = "TRUE") {
 	      $systemname = "Panasonic - 3DO";
+		  last;
+		} elsif (uc substr($magic, 0, 7) eq "SAMPLER" and $match = "TRUE") {
+		  $systemname = "Panasonic - 3DO";
+		  last;
+		} elsif (uc substr($magic, 0, 4) eq "TECD" and $match = "TRUE") {
+		  $systemname = "Panasonic - 3DO";
+		  last;
 		}
 	  }
 	}
@@ -398,7 +407,7 @@ foreach my $element (@linesf) {
 
              or ($game_id eq "ULKS-")
              or ($game_id eq "ULAS-")
-             or ($game_id eq "ULKS-")
+			 or ($game_id eq "UCKS-")
 
              or ($game_id eq "NPEH-")
              or ($game_id eq "NPUH-")
@@ -904,11 +913,15 @@ foreach my $element (@linesf) {
     open(FILE, $directory . "/" . $element) or die "Could not open file '$element' $!";
     binmode FILE;
   
-    $temp = <FILE>;
-    my $resultgamestart = index($temp, 'FILE "');
-	my $resultgameend = rindex($temp, '" BINARY');
-	my $length = $resultgameend - $resultgamestart;
-	$cuefile = substr($temp, $resultgamestart + 6, $length - 6);
+    while ($temp = <FILE>) {
+      if ($temp =~ /FILE/) {
+	    my $resultgamestart = index($temp, 'FILE "');
+	    my $resultgameend = rindex($temp, '" BINARY');
+	    my $length = $resultgameend - $resultgamestart;
+	    $cuefile = substr($temp, $resultgamestart + 6, $length - 6);
+	    last;
+	  }
+	}
     
 	#read bin file
 	open(BIN, $directory . "/" . $cuefile) or die "Could not open file '$cuefile' $!";
@@ -1010,10 +1023,17 @@ foreach my $element (@linesf) {
 	for ($pos = 0; $pos < 10000; $pos++) {
     
 	  seek BIN, $pos, 0;
-      if ((read BIN, $magic, 6) > 0) {
+      if ((read BIN, $magic, 7) > 0) {
 
-        if (uc $magic eq "CD-ROM" and $match = "TRUE") {
+        if (uc substr($magic, 0, 6) eq "CD-ROM" and $match = "TRUE") {
 	      $systemname = "Panasonic - 3DO";
+		  last;
+		} elsif (uc substr($magic, 0, 7) eq "SAMPLER" and $match = "TRUE") {
+		  $systemname = "Panasonic - 3DO";
+		  last;
+		} elsif (uc substr($magic, 0, 4) eq "TECD" and $match = "TRUE") {
+		  $systemname = "Panasonic - 3DO";
+		  last;
 		}
 	  }
 	}
